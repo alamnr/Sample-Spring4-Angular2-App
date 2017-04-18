@@ -17,10 +17,6 @@ import com.book.healthapp.domain.User;
 public class UserDAOImpl implements UserDAO {
 
 	@Autowired private SessionFactory sessionFactory;
-
-    public void setSessionFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
-    }
     
     @SuppressWarnings("unchecked")
     @Override

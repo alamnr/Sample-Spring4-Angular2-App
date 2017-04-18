@@ -21,11 +21,10 @@ import com.book.healthapp.domain.User;
 import com.book.healthapp.interceptors.SignupInterceptor;
 
 @Configuration
-@ComponentScan("com.book.healthapp")
 @EntityScan("com.book.healthapp.domain")
-@PropertySource("classpath:application.properties")
 @EnableTransactionManagement
-public class AppConfig extends WebMvcConfigurerAdapter  { 
+@PropertySource("classpath:application.properties")
+public class AppConfig  { 
 	
 	@Value("${spring.datasource.driverClassName}") String driverClassName;
 	@Value("${spring.datasource.url}") String url;
@@ -44,15 +43,13 @@ public class AppConfig extends WebMvcConfigurerAdapter  {
 	    return dataSource;
 	}
 	
-	@Autowired
 	@Bean(name = "sessionFactory")
 	public SessionFactory getSessionFactory(DataSource dataSource) {
 	    LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
-	    sessionBuilder.addAnnotatedClasses(User.class);
+	    sessionBuilder.scanPackages("com.book.healthapp.domain");
 	    return sessionBuilder.buildSessionFactory();
 	}
 	
-	@Autowired
 	@Bean(name = "transactionManager")
 	public HibernateTransactionManager getTransactionManager(
 	        SessionFactory sessionFactory) {
@@ -61,8 +58,8 @@ public class AppConfig extends WebMvcConfigurerAdapter  {
 	    return transactionManager;
 	}
 	
-	@Override
-	public void addInterceptors(InterceptorRegistry registry) {
+//	@Override
+//	public void addInterceptors(InterceptorRegistry registry) {
 //	    registry.addInterceptor(new SignupInterceptor()).addPathPatterns("/account/signup/process");
-	}
+//	}
 } 
