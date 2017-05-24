@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.book.healthapp.domain.User;
+import com.book.healthapp.exceptions.UnmatchingUserCredentialsException;
+import com.book.healthapp.exceptions.UserNotFoundException;
 import com.book.healthapp.helpers.ExecutionStatus;
 import com.book.healthapp.services.UserService;
 
@@ -30,16 +32,19 @@ public class UserAccountController {
     }
 	
 	@PostMapping(value="/login/process", produces="application/json")
-	public ModelAndView processLogin(ModelMap model, @RequestParam("emailaddress") String email, 
-			@RequestParam("password") String password) {
+	public @ResponseBody ExecutionStatus processLogin(ModelMap model, @RequestBody User reqUser) {
 		
-		User user = userService.isValidUser(email, password);
-		if(user == null) {
-			model.addAttribute("message", "Username or password is incorrect. Please try again!");
-			return new ModelAndView("login", model);
+		User user = null;
+		try {
+			user = userService.isValidUser(reqUser.getEmail(), reqUser.getPassword());
+		} catch (UnmatchingUserCredentialsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		model.addAttribute("user", user);
-		return new ModelAndView("home", model);
+		if(user == null) {
+			return new ExecutionStatus("USER_LOGIN_UNSUCCESSFUL", "Username or password is incorrect. Please try again!");
+		}
+		return new ExecutionStatus("USER_LOGIN_SUCCESSFUL", "Login Successful!");
 	}
 
 	
@@ -51,7 +56,13 @@ public class UserAccountController {
 	@RequestMapping(value="/signup/process", method=RequestMethod.POST, produces="application/json")
 	public @ResponseBody ExecutionStatus processSignup(ModelMap model, @RequestBody User reqUser) {
 		
-		User user = userService.doesUserExist(reqUser.getEmail());
+		User user = null;
+		try {
+			user = userService.doesUserExist(reqUser.getEmail());
+		} catch (UserNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(user != null) {
 			return new ExecutionStatus("USER_ACCOUNT_EXISTS", "User account with same email address exists. Please try again!");
 		}
@@ -70,6 +81,23 @@ public class UserAccountController {
 		User persistedUser = userService.save(user);
 		return new ExecutionStatus("USER_ACCOUNT_CREATED", "User account successfully created");
 	}
+	
+	@RequestMapping(value="/user/update", method=RequestMethod.POST, produces="application/json")
+	public @ResponseBody ExecutionStatus updateUser(ModelMap model, @RequestBody User reqUser) {
+		User user = new User();
+		user.setId(reqUser.getId());
+		user.setFirstName(reqUser.getFirstname());
+		user.setLastname(reqUser.getLastname());
+		user.setContactNumber(reqUser.getContactNumber());
+		user.setAlternateContactNumber(reqUser.getAlternateContactNumber());
+		user.setCityCode(reqUser.getCityCode());
+		user.setStateCode(reqUser.getStateCode());
+		user.setCountryCode(reqUser.getCountryCode());
+		user.setAge(reqUser.getAge());
+		user.setGender(reqUser.getGender());
+		userService.update(user);
+		return new ExecutionStatus("USER_ACCOUNT_UPDATED", "User account successfully updated");
+	}
 
 	@PostMapping(value="/update", produces="application/json")
 	public ModelAndView updateProfile(ModelMap model, @RequestParam("firstName") String firstName,
@@ -87,7 +115,13 @@ public class UserAccountController {
 	@PostMapping(value="/forgotpassword/process", produces="application/json")
 	public ModelAndView processForgotPassword(ModelMap model, @RequestParam("emailaddress") String email) {
 		
-		User user = userService.doesUserExist(email);
+		User user = null;
+		try {
+			user = userService.doesUserExist(email);
+		} catch (UserNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(user != null) {
 			
 		}	

@@ -6,32 +6,44 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.book.healthapp.domain.User;
+import com.book.healthapp.exceptions.UnmatchingUserCredentialsException;
+import com.book.healthapp.exceptions.UserNotFoundException;
 import com.book.healthapp.repositories.UserDAO;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-	@Autowired private UserDAO userDAO;
+	private UserDAO userDAO;
+	
+	@Autowired
+    public UserServiceImpl(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 	
 	@Override
 	public User save(User user) {
 		return userDAO.save(user);
 	}
+	
+	@Override
+	public void update(User user) {
+		userDAO.update(user);
+	}
 
 	@Override
-	public User doesUserExist(String email) {
+	public User doesUserExist(String email) throws UserNotFoundException {
 		List<User> users = (List<User>) userDAO.findByEmail(email);
-		if(users == null || users.size() == 0) {
-			return null;
+		if(users.size() == 0) {
+			throw new UserNotFoundException("User does not exist in the database.");
 		} 
 		return users.get(0);
 	}
 
 	@Override
-	public User isValidUser(String email, String password) {
+	public User isValidUser(String email, String password) throws UnmatchingUserCredentialsException {
 		List<User> users = (List<User>) userDAO.findByEmailAndPassword(email, password);
 		if(users == null || users.size() == 0) {
-			return null;
+			throw new UnmatchingUserCredentialsException("User with given credentials is not found in the database.");
 		} 
 		return users.get(0);
 	}
